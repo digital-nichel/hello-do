@@ -2,7 +2,6 @@ package service
 
 import (
 	"fmt"
-	"github.com/rs/zerolog/log"
 	"github.com/samber/do"
 	"hello-do/store"
 )
@@ -11,7 +10,7 @@ type Service interface {
 	do.Healthcheckable
 	do.Shutdownable
 
-	Handle()
+	GetItems() ([]string, error)
 }
 
 type service struct {
@@ -26,15 +25,6 @@ func NewService(i *do.Injector) (Service, error) {
 	}, nil
 }
 
-func (s *service) Handle() {
-	items, err := s.store.GetItems()
-	if err != nil {
-		log.Fatal().Err(err).Msg("Failed to get items")
-	}
-
-	log.Info().Strs("Items", items).Msg("Items")
-}
-
 func (s *service) Shutdown() error {
 	return nil
 }
@@ -45,4 +35,8 @@ func (s *service) HealthCheck() error {
 	}
 
 	return s.store.HealthCheck()
+}
+
+func (s *service) GetItems() ([]string, error) {
+	return s.store.GetItems()
 }

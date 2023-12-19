@@ -42,8 +42,6 @@ func main() {
 		log.Fatal().Err(err).Msg("Health check failed")
 	}
 
-	s.Handle()
-
 	if err := injector.Shutdown(); err != nil {
 		log.Fatal().Err(err).Msg("Shutdown failed")
 	}
