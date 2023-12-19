@@ -34,5 +34,8 @@ func (s *store) HealthCheck() error {
 }
 
 func (s *store) GetItems() ([]string, error) {
+	// Simulate some work
+	time.Sleep(1 * time.Second)
+
 	return s.items, nil
 }

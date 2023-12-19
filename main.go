@@ -26,7 +26,7 @@ func main() {
 		},
 
 		Logf: func(format string, args ...any) {
-			log.Debug().Msgf(format, args...)
+			log.Trace().Msgf(format, args...)
 		},
 	})
 
@@ -41,6 +41,13 @@ func main() {
 	if err := s.HealthCheck(); err != nil {
 		log.Fatal().Err(err).Msg("Health check failed")
 	}
+
+	items, err := s.GetItems()
+	if err != nil {
+		log.Fatal().Err(err).Msg("Get items failed")
+	}
+
+	log.Info().Strs("Items", items).Msg("Get items")
 
 	if err := injector.Shutdown(); err != nil {
 		log.Fatal().Err(err).Msg("Shutdown failed")

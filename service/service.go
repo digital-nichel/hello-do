@@ -18,7 +18,10 @@ type service struct {
 }
 
 func NewService(i *do.Injector) (Service, error) {
-	s := do.MustInvoke[store.Store](i)
+	s, err := do.Invoke[store.Store](i)
+	if err != nil {
+		return nil, err
+	}
 
 	return &service{
 		store: s,
