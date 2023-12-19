@@ -1,24 +1,50 @@
 package main
 
 import (
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"github.com/samber/do"
-	"log"
+	"hello-do/service"
+	"hello-do/store"
+	"os"
 )
 
 func main() {
-	injector := do.New()
+	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 
-	do.Provide(injector, NewStore)
-	do.Provide(injector, NewService)
+	injector := do.NewWithOpts(&do.InjectorOpts{
+		HookAfterRegistration: func(injector *do.Injector, serviceName string) {
+			log.Info().
+				Str("Service", serviceName).
+				Msg("Service registered")
+		},
 
-	s := do.MustInvoke[Service](injector)
-	s.Start()
+		HookAfterShutdown: func(injector *do.Injector, serviceName string) {
+			log.Info().
+				Str("Service", serviceName).
+				Msg("Service shutdown")
+		},
 
-	//if err := do.HealthCheck[Service](injector); err != nil {
-	//	log.Fatal(err)
-	//}
+		Logf: func(format string, args ...any) {
+			log.Debug().Msgf(format, args...)
+		},
+	})
+
+	do.Provide(injector, store.NewStore)
+	do.Provide(injector, service.NewService)
+
+	s, err := do.Invoke[service.Service](injector)
+	if err != nil {
+		log.Fatal().Err(err).Msg("Failed to create service")
+	}
+
+	if err := s.HealthCheck(); err != nil {
+		log.Fatal().Err(err).Msg("Health check failed")
+	}
+
+	s.Handle()
 
 	if err := injector.Shutdown(); err != nil {
-		log.Fatal(err)
+		log.Fatal().Err(err).Msg("Shutdown failed")
 	}
 }
