@@ -31,23 +31,37 @@ func main() {
 	})
 
 	do.Provide(injector, store.NewStore)
-	do.Provide(injector, service.NewService)
+	do.ProvideNamed(injector, "Service-01", service.NewService)
+	do.ProvideNamed(injector, "Service-02", service.NewService)
 
-	s, err := do.Invoke[service.Service](injector)
+	s1, err := do.InvokeNamed[service.Service](injector, "Service-01")
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to create service")
 	}
 
-	if err := s.HealthCheck(); err != nil {
+	if err := s1.HealthCheck(); err != nil {
 		log.Fatal().Err(err).Msg("Health check failed")
 	}
 
-	items, err := s.GetItems()
+	items, err := s1.GetItems()
 	if err != nil {
-		log.Fatal().Err(err).Msg("Get items failed")
+		log.Warn().Str("Service", "Service-01").Err(err).Msg("Get items failed")
 	}
 
-	log.Info().Strs("Items", items).Msg("Get items")
+	log.Info().Str("Service", "Service-01").Strs("Items", items).Msg("Get items")
+
+	_, err = s1.GetItems()
+	if err != nil {
+		log.Warn().Str("Service", "Service-01").Err(err).Msg("Get items failed")
+	}
+
+	s2 := do.MustInvokeNamed[service.Service](injector, "Service-02")
+	_, err = s2.GetItems()
+	if err != nil {
+		log.Warn().Str("Service", "Service-02").Err(err).Msg("Get items failed")
+	}
+
+	log.Info().Str("Service", "Service-02").Strs("Items", items).Msg("Get items")
 
 	if err := injector.Shutdown(); err != nil {
 		log.Fatal().Err(err).Msg("Shutdown failed")

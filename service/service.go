@@ -14,7 +14,8 @@ type Service interface {
 }
 
 type service struct {
-	store store.Store
+	store  store.Store
+	Called bool
 }
 
 func NewService(i *do.Injector) (Service, error) {
@@ -24,7 +25,8 @@ func NewService(i *do.Injector) (Service, error) {
 	}
 
 	return &service{
-		store: s,
+		store:  s,
+		Called: false,
 	}, nil
 }
 
@@ -41,5 +43,10 @@ func (s *service) HealthCheck() error {
 }
 
 func (s *service) GetItems() ([]string, error) {
-	return s.store.GetItems()
+	if s.Called == false {
+		s.Called = true
+		return s.store.GetItems()
+	}
+
+	return nil, fmt.Errorf("GetItems called more than once")
 }
